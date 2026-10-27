@@ -240,7 +240,7 @@ func (m *Manager) kickLogHeaderLocked(agent *AgentProcess, stampKey string, now 
 		model = "default"
 	}
 	return fmt.Sprintf(
-		"==== hive kick log ====\nagent: %s\n%s: %s\nreason: %s\nkick_started: %s\nkick_prompt: %s\nhive_version: %s\nhive_commit: %s\nbackend: %s\nmodel: %s\n"+kickLogHeaderSourceKey+"%s\ntmux_session: %s\n"+kickLogHeaderEnd+"\n",
+		"==== hive kick log ====\nagent: %s\n%s: %s\nreason: %s\nkick_started: %s\nkick_prompt: %s\nhive_version: %s\nhive_commit: %s\nbackend: %s\nmodel: %s\nhouse_style: %s\n"+kickLogHeaderSourceKey+"%s\ntmux_session: %s\n"+kickLogHeaderEnd+"\n",
 		agent.Name,
 		stampKey,
 		now.UTC().Format(time.RFC3339),
@@ -251,6 +251,7 @@ func (m *Manager) kickLogHeaderLocked(agent *AgentProcess, stampKey string, now 
 		commit,
 		agent.effectiveBackend(),
 		model,
+		crux.HouseStyleSource(agent.LastKickMessage),
 		source,
 		agent.tmuxSession,
 	)
@@ -372,11 +373,12 @@ func readKickLogDir(dir string) ([]KickLogInfo, error) {
 			continue
 		}
 		infos = append(infos, KickLogInfo{
-			ID:        e.Name(),
-			Timestamp: kickLogTimestamp(e.Name(), fi.ModTime()),
-			SizeBytes: fi.Size(),
-			Reason:    kickLogReason(e.Name()),
-			Source:    kickLogHeaderSource(filepath.Join(dir, e.Name())),
+			ID:               e.Name(),
+			Timestamp:        kickLogTimestamp(e.Name(), fi.ModTime()),
+			SizeBytes:        fi.Size(),
+			Reason:           kickLogReason(e.Name()),
+			Source:           kickLogHeaderSource(filepath.Join(dir, e.Name())),
+			HouseStyleSource: kickLogHeaderValue(filepath.Join(dir, e.Name()), "house_style: "),
 		})
 	}
 	// Filename timestamps sort lexicographically == chronologically; sort by
@@ -388,6 +390,10 @@ func readKickLogDir(dir string) ([]KickLogInfo, error) {
 // kickLogHeaderSource reads the source: line out of an archive's header,
 // returning "" when the file cannot be read or the header has none.
 func kickLogHeaderSource(path string) string {
+	return kickLogHeaderValue(path, kickLogHeaderSourceKey)
+}
+
+func kickLogHeaderValue(path, key string) string {
 	f, err := os.Open(path)
 	if err != nil {
 		return ""
@@ -399,7 +405,7 @@ func kickLogHeaderSource(path string) string {
 		if line == kickLogHeaderEnd {
 			return ""
 		}
-		if v, ok := strings.CutPrefix(line, kickLogHeaderSourceKey); ok {
+		if v, ok := strings.CutPrefix(line, key); ok {
 			return strings.TrimSpace(v)
 		}
 	}

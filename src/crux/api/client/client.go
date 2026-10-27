@@ -305,7 +305,7 @@ func (r *Runtime) ListKickLogs(name string) ([]crux.KickLogInfo, error) {
 	}
 	out := make([]crux.KickLogInfo, 0, len(list.Logs))
 	for _, l := range list.Logs {
-		out = append(out, crux.KickLogInfo{ID: l.ID, Timestamp: l.Timestamp, SizeBytes: l.SizeBytes, Reason: l.Reason, Source: l.Source})
+		out = append(out, crux.KickLogInfo{ID: l.ID, Timestamp: l.Timestamp, SizeBytes: l.SizeBytes, Reason: l.Reason, Source: l.Source, HouseStyleSource: l.HouseStyleSource})
 	}
 	return out, nil
 }

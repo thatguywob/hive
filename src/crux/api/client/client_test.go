@@ -180,7 +180,7 @@ func TestEveryMethodReachesTheRuntime(t *testing.T) {
 	rec.Header["alpha"] = "hdr"
 	rec.KickStarted = true
 	rec.Dispatch = map[string]crux.KickDispatch{"alpha": {Agent: "alpha", Phase: "queued"}}
-	rec.KickLogs = map[string][]crux.KickLogInfo{"alpha": {{ID: "k1", Reason: "r"}}}
+	rec.KickLogs = map[string][]crux.KickLogInfo{"alpha": {{ID: "k1", Reason: "r", HouseStyleSource: "repo"}}}
 	rec.KickLogContent = map[string]map[string]string{"alpha": {"k1": "content"}}
 	rec.Reconciled = []string{"alpha"}
 	rec.BreakerEngaged = true
@@ -273,7 +273,7 @@ func TestEveryMethodReachesTheRuntime(t *testing.T) {
 	check("KickDispatchState.phase", d.Phase, "queued")
 	kl, err := rt.ListKickLogs("alpha")
 	must("ListKickLogs", err)
-	check("ListKickLogs", kl, []crux.KickLogInfo{{ID: "k1", Reason: "r"}})
+	check("ListKickLogs", kl, []crux.KickLogInfo{{ID: "k1", Reason: "r", HouseStyleSource: "repo"}})
 	kc, err := rt.ReadKickLog("alpha", "k1")
 	must("ReadKickLog", err)
 	check("ReadKickLog", kc, "content")

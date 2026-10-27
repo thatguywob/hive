@@ -8,7 +8,7 @@ This page is for teams that want Hive to read actionable work items from a plann
 
 A **work source** is the Step 01 input to Hive's governor loop. The normalized record is `worksource.Issue`: it carries source type, target repo, source-native external ID, title, author, labels, assignees, priority, state, timestamps, canonical URL, tracker flag, stage, and dependency edges (`src/pkg/worksource/worksource.go:18`). The `WorkSource` interface itself has only `SourceType()` and `ListIssues(context.Context)` (`src/pkg/worksource/worksource.go:73`).
 
-`governor.work_source` chooses one primary source: `github`/empty, `github_projects`, `linear`, or `jira` (`src/pkg/config/config.go:2196`). Pending run stages and Wavefront graph nodes are additive sources, not replacement primaries (`src/pkg/config/config.go:2199`, `src/pkg/config/config.go:2209`). The factory dispatches those primary names in `FromConfig` and rejects unknown values (`src/pkg/worksource/factory.go:18`, `src/pkg/worksource/factory.go:122`).
+`governor.work_source` chooses one primary source: `github`/empty, `github_projects`, `linear`, or `jira` (`src/pkg/config/config.go:2201`). Pending run stages and Wavefront graph nodes are additive sources, not replacement primaries (`src/pkg/config/config.go:2204`, `src/pkg/config/config.go:2214`). The factory dispatches those primary names in `FromConfig` and rejects unknown values (`src/pkg/worksource/factory.go:18`, `src/pkg/worksource/factory.go:122`).
 
 ## Interface
 
@@ -25,7 +25,7 @@ Hive's change-request execution still assumes a Git forge target repository. The
 
 ## Step-by-step: contribute a primary adapter
 
-1. Add config fields under `WorkSourceConfig` in `src/pkg/config/config.go` and include them in `IsZero`/validation if needed (`src/pkg/config/config.go:2196`).
+1. Add config fields under `WorkSourceConfig` in `src/pkg/config/config.go` and include them in `IsZero`/validation if needed (`src/pkg/config/config.go:2201`).
 2. Implement a `WorkSource` in `src/pkg/worksource`, following `LinearSource`, `jiraSource`, or `githubProjectsSource` as shapes (`src/pkg/worksource/linear.go:80`, `src/pkg/worksource/jira.go:84`, `src/pkg/worksource/github_projects.go:49`).
 3. Add a `case` in `FromConfig` and return a useful config error for every required field (`src/pkg/worksource/factory.go:18`).
 4. Add dashboard settings round-trip support if operators should configure it from Settings -> Work source; the existing route is `handleGovernorWorkSourceGet`/`Put` (`src/pkg/dashboard/api_governor_features.go:723`, `src/pkg/dashboard/api_governor_features.go:737`).

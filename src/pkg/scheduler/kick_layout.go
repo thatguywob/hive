@@ -17,6 +17,7 @@ import (
 //
 //	1. [canary]                              random, opt-in, ALWAYS first (ADR-0008; added by BuildKickMessages)
 //	2. [agent:<name>]                        static — the kick header
+//	   HOUSE STYLE                          static per primary repo + hive config
 //	3. governor work-source rule             static
 //	4. independent review section            static per agent config
 //	5. workflow push ceiling                 static per agent mode
@@ -80,6 +81,7 @@ func (s *Scheduler) assembleKick(a kickAssembly, message string) string {
 	// after the header line, so the LAST one applied ends up FIRST; the slice
 	// is written in reading order and applied in reverse to keep it readable.
 	staticSeams := []func(string) string{
+		func(m string) string { return s.addHouseStyle(a.agent, m) },
 		addGovernorWorkSourceRule,
 		func(m string) string { return s.addIndependentReviewSection(a.agent, m) },
 		func(m string) string { return s.addWorkflowPushCeiling(a.agent, m) },

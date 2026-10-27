@@ -136,12 +136,12 @@ Kick *timing* lives in `pkg/governor`; kick *text* is built in `pkg/scheduler`.
 - `Governor.Evaluate` (`src/pkg/governor/governor.go:377`) calls it at
   `src/pkg/governor/governor.go:485` and returns the due list.
 - The driving loop is a single ticker in `main`:
-  `deps.newTicker(initialEvalInterval)` at `src/cmd/hive/main.go:5889`, loop at
-  `src/cmd/hive/main.go:6126`, evaluation via `deps.runEval` at
-  `src/cmd/hive/main.go:6045` (`runEvalCycle`, `src/cmd/hive/main.go:6710`),
-  message assembly via `sched.BuildKickMessagesWithSkips` at `src/cmd/hive/main.go:7138`
+  `deps.newTicker(initialEvalInterval)` at `src/cmd/hive/main.go:5890`, loop at
+  `src/cmd/hive/main.go:6127`, evaluation via `deps.runEval` at
+  `src/cmd/hive/main.go:6046` (`runEvalCycle`, `src/cmd/hive/main.go:6711`),
+  message assembly via `sched.BuildKickMessagesWithSkips` at `src/cmd/hive/main.go:7139`
   (`src/pkg/scheduler/kickmessage.go:261`), and delivery via
-  `agentMgr.SendKick` wired into `dispatchAgentKicks` at `src/cmd/hive/main.go:7241`.
+  `agentMgr.SendKick` wired into `dispatchAgentKicks` at `src/cmd/hive/main.go:7242`.
 
 This matters for the RFC: the scheduler is already **stateless with respect to
 turns**. It does not hold a continuation, does not await turn *N* before
@@ -158,12 +158,12 @@ CLI subprocess.
 
 | State | Where | Citation |
 |---|---|---|
-| Pause flag (one bool per agent) | `/data/hive.yaml` via `AgentConfig.Paused` | `src/crux/config/agent_config.go:219`; writer `SetAgentPausedAndSave` `src/pkg/config/config.go:6524` |
+| Pause flag (one bool per agent) | `/data/hive.yaml` via `AgentConfig.Paused` | `src/crux/config/agent_config.go:219`; writer `SetAgentPausedAndSave` `src/pkg/config/config.go:6529` |
 | Pause provenance (`PausedAt`, `PausedReason`, `PausedTrigger`, `PausedBy`), CLI/model pins, model/backend overrides, restart count, `LastKick`, truncated kick history | `/data/hive-state.json` via `snapshot.AgentState` | `src/pkg/snapshot/state.go:82-117`; path `src/cmd/hive/spokewire.go:3` |
 | Watchdog failure count, crash-loop latch, backoff deadline, healthy-since, conditions | same file, `snapshot.PersistedState.Watchdog` | `src/pkg/snapshot/state.go:48`; `watchdog.PersistedAgent` `src/crux/watchdog/reconciler.go:216` |
 | Fleet-breaker engagement + held set | same file, `BreakerState` | `src/pkg/snapshot/state.go:56` |
 | Governor budget/spend/eval history, cadence overrides, ACMM level | same file | `src/pkg/snapshot/state.go:16-42` |
-| **Full text of every delivered prompt** | `/data/prompt-history.jsonl` (lumberjack-rotated JSONL) | `src/pkg/dashboard/prompt_history.go:24`; writer `Server.RecordPrompt` `src/pkg/dashboard/prompt_history.go:361`, wired at `src/cmd/hive/main.go:4035` |
+| **Full text of every delivered prompt** | `/data/prompt-history.jsonl` (lumberjack-rotated JSONL) | `src/pkg/dashboard/prompt_history.go:24`; writer `Server.RecordPrompt` `src/pkg/dashboard/prompt_history.go:361`, wired at `src/cmd/hive/main.go:4036` |
 | **Rendered terminal scrollback, per kick** | `/data/logs/kicks/<agent>/<ts>-<reason>.log` | `src/crux/agent/kick_logs.go:22` (`defaultKickLogDir`); writer `archiveKickLogLocked` `src/crux/agent/kick_logs.go:178` |
 | Token-usage summary | `/data/token-summary.json` | `src/pkg/tokens/collector.go:202`, `:608-611` |
 | Structured audit trail | `/data/audit.jsonl`, reloaded into a ring at boot | `src/pkg/dashboard/audit.go:23`, `loadFromDisk` `:189` |
@@ -244,7 +244,7 @@ Three things about this are worth stating precisely:
   (`src/crux/agent/manager_tmux.go:286-288`) — a surviving session is reused, not
   recreated. Boot reaches both: `main` unconditionally calls
   `agentMgr.Start(ctx, name)` (via `deps.startAgent`) for every enabled agent
-  (`src/cmd/hive/main.go:4514`) and the reuse-vs-relaunch decision is taken
+  (`src/cmd/hive/main.go:4515`) and the reuse-vs-relaunch decision is taken
   inside. There is no `Adopt`, `Reattach`, or `RecoverAgents` function;
   searching for one finds only `RestoreBreaker`
   (`src/crux/agent/manager_pause.go:382`), which restores control metadata and is

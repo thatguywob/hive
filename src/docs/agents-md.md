@@ -1,5 +1,9 @@
 # AGENTS.md repo instructions
 
+For a short output-style ruleset shared across every backend and template, see
+[House style (`HIVE_STYLE.md`)](house-style.md). It coexists with `AGENTS.md`
+and has its own fallback chain; it does not change the checkout requirement below.
+
 > **⚠️ Wired, but off unless you supply a checkout.** Hive ships a complete
 > `AGENTS.md` parser (`src/pkg/agentsmd`) and a call site that prepends its
 > output to every kick prompt. That call site used to be permanently disabled —

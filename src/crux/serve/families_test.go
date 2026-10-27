@@ -271,11 +271,11 @@ func TestKickerRoutes(t *testing.T) {
 		t.Fatalf("dispatch: %+v", disp)
 	}
 
-	f.rt.KickLogs["alpha"] = []crux.KickLogInfo{{ID: "k1", Reason: "kick", SizeBytes: 3}}
+	f.rt.KickLogs["alpha"] = []crux.KickLogInfo{{ID: "k1", Reason: "kick", SizeBytes: 3, HouseStyleSource: "hive"}}
 	f.rt.KickLogContent["alpha"] = map[string]string{"k1": "abc"}
 	var logs api.KickLogList
 	f.expect(http.MethodGet, api.KickLogsPath("alpha"), nil, http.StatusOK, &logs)
-	if len(logs.Logs) != 1 || logs.Logs[0].ID != "k1" || logs.Logs[0].SizeBytes != 3 {
+	if len(logs.Logs) != 1 || logs.Logs[0].ID != "k1" || logs.Logs[0].SizeBytes != 3 || logs.Logs[0].HouseStyleSource != "hive" {
 		t.Fatalf("kick logs: %+v", logs)
 	}
 	var log api.KickLog

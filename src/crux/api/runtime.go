@@ -158,11 +158,12 @@ type KickDispatchResponse struct {
 
 // KickLogInfo mirrors crux.KickLogInfo.
 type KickLogInfo struct {
-	ID        string    `json:"id"`
-	Timestamp time.Time `json:"timestamp"`
-	SizeBytes int64     `json:"size_bytes"`
-	Reason    string    `json:"reason"`
-	Source    string    `json:"source,omitempty"`
+	ID               string    `json:"id"`
+	Timestamp        time.Time `json:"timestamp"`
+	SizeBytes        int64     `json:"size_bytes"`
+	Reason           string    `json:"reason"`
+	Source           string    `json:"source,omitempty"`
+	HouseStyleSource string    `json:"house_style_source,omitempty"`
 }
 
 // KickLogList is the body of GET /v1/agents/{name}/kicklogs.

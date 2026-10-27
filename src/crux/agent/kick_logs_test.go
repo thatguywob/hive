@@ -543,3 +543,24 @@ func TestFullLogHeader_UnknownAgentOrNoSession(t *testing.T) {
 		t.Errorf("no-session header = %q, want empty", got)
 	}
 }
+
+func TestKickLogPersistsHouseStyleSource(t *testing.T) {
+	m, agent, _ := kickLogTestManager(t, "run output")
+	agent.LastKickMessage = "[agent:scanner]\n\n## HOUSE STYLE (source: repo)\n\nRepo rules"
+	if !m.archiveKickLogLocked(agent, "kick") {
+		t.Fatal("archive failed")
+	}
+	// The source must describe the archived prompt, not the next kick's style.
+	agent.LastKickMessage = "[agent:scanner]\n\n## HOUSE STYLE (source: hive)\n\nHost rules"
+	infos, err := m.ListKickLogs("scanner")
+	if err != nil || len(infos) != 1 {
+		t.Fatalf("archives: %+v %v", infos, err)
+	}
+	if infos[0].HouseStyleSource != "repo" {
+		t.Fatalf("archived style: %q", infos[0].HouseStyleSource)
+	}
+	body, err := m.ReadKickLog("scanner", infos[0].ID)
+	if err != nil || !strings.Contains(body, "\nhouse_style: repo\n") {
+		t.Fatalf("archive omitted source: %s %v", body, err)
+	}
+}

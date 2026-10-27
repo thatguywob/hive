@@ -206,3 +206,23 @@ func TestHandleAgentKickHistoryPage_ShowsSource(t *testing.T) {
 		t.Errorf("header-less archive should show a dash:\n%s", body)
 	}
 }
+
+func TestKickHistoryHouseStyleSource(t *testing.T) {
+	s, id := kickHistoryServer(t, "==== hive kick log ====\nagent: scanner\nhouse_style: repo\n=======================\nbody\n")
+	rec := doGet(s, "/api/agents/scanner/kicks")
+	var infos []crux.KickLogInfo
+	if err := json.Unmarshal(rec.Body.Bytes(), &infos); err != nil {
+		t.Fatal(err)
+	}
+	if len(infos) != 1 || infos[0].ID != id || infos[0].HouseStyleSource != "repo" {
+		t.Fatalf("archive source missing: %+v", infos)
+	}
+	page := doGet(s, "/agents/scanner/kicks")
+	if body := page.Body.String(); !strings.Contains(body, "<th>house style</th>") || !strings.Contains(body, "<td>repo</td>") {
+		t.Fatalf("history style missing: %s", body)
+	}
+	detail := doGet(s, "/api/agents/scanner/kicks/"+id)
+	if !strings.Contains(detail.Body.String(), "house_style: repo") {
+		t.Fatalf("detail source missing: %s", detail.Body.String())
+	}
+}

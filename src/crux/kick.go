@@ -93,5 +93,6 @@ type KickLogInfo struct {
 	// Source is the header's source: line — "scrollback" or "transcript"
 	// (#11762) — so a listing can say which without opening the file. Empty
 	// for archives written before the header carried one.
-	Source string `json:"source,omitempty"`
+	Source           string `json:"source,omitempty"`
+	HouseStyleSource string `json:"house_style_source,omitempty"`
 }

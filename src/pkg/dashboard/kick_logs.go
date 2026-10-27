@@ -97,7 +97,7 @@ table{border-collapse:collapse;margin-top:1rem}td,th{padding:.3rem .9rem;text-al
 		// (transcript or scrollback), so a tester switching the kick log
 		// source can confirm what each archive was built from without
 		// opening it. Archives older than the header field show a dash.
-		_, _ = fmt.Fprint(w, `<table><tr><th>kick started (UTC)</th><th>trigger</th><th>source</th><th>size</th><th></th></tr>`)
+		_, _ = fmt.Fprint(w, `<table><tr><th>kick started (UTC)</th><th>trigger</th><th>source</th><th>house style</th><th>size</th><th></th></tr>`)
 		for _, info := range infos {
 			id := html.EscapeString(info.ID)
 			source := `<span class="muted">—</span>`
@@ -105,8 +105,8 @@ table{border-collapse:collapse;margin-top:1rem}td,th{padding:.3rem .9rem;text-al
 				source = html.EscapeString(info.Source)
 			}
 			_, _ = fmt.Fprintf(w,
-				`<tr><td>%s</td><td>%s</td><td>%s</td><td>%d B</td><td><a href="/api/agents/%s/kicks/%s" target="_blank">view</a></td></tr>`,
-				info.Timestamp.UTC().Format(time.RFC3339), html.EscapeString(info.Reason), source, info.SizeBytes, esc, id)
+				`<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%d B</td><td><a href="/api/agents/%s/kicks/%s" target="_blank">view</a></td></tr>`,
+				info.Timestamp.UTC().Format(time.RFC3339), html.EscapeString(info.Reason), source, html.EscapeString(info.HouseStyleSource), info.SizeBytes, esc, id)
 		}
 		_, _ = fmt.Fprint(w, `</table>`)
 	}

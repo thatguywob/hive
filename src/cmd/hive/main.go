@@ -1842,6 +1842,7 @@ func (b *boot) bootGovernor() {
 	if b.ghClient != nil {
 		b.promptFetcher = b.ghClient
 	}
+	b.sched.SetStyleFetcher(b.promptFetcher)
 	b.sched.SetGitHubPromptResolver(promptsrc.NewResolver(
 		b.promptFetcher,
 		func(slug string) bool { return b.cfg.GitHubPromptAllowed(slug) },

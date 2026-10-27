@@ -316,7 +316,7 @@ func (s *Server) handleKickLogs(w http.ResponseWriter, r *http.Request) {
 	}
 	out := api.KickLogList{Agent: name, Logs: make([]api.KickLogInfo, 0, len(infos))}
 	for _, in := range infos {
-		out.Logs = append(out.Logs, api.KickLogInfo{ID: in.ID, Timestamp: in.Timestamp, SizeBytes: in.SizeBytes, Reason: in.Reason, Source: in.Source})
+		out.Logs = append(out.Logs, api.KickLogInfo{ID: in.ID, Timestamp: in.Timestamp, SizeBytes: in.SizeBytes, Reason: in.Reason, Source: in.Source, HouseStyleSource: in.HouseStyleSource})
 	}
 	s.writeJSON(w, http.StatusOK, out)
 }

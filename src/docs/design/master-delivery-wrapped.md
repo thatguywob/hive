@@ -149,7 +149,7 @@ already persists private key material on the same PVC at the same mode:
 `appkey.DefaultDataDir = "/data"`, with `appkey.DefaultFileMode = 0o600`
 and the comment "signing material must never be readable by anything
 else sharing the PVC or the pod" (`src/pkg/appkey/appkey.go`). `/data` is the PVC mount in the spoke template
-(`src/pkg/hub/saas_provision.go:2585`), and `/data/hive-id` (`src/cmd/hive/main.go:5297`)
+(`src/pkg/hub/saas_provision.go:2585`), and `/data/hive-id` (`src/cmd/hive/main.go:5298`)
 already establishes that identity-critical state persists there across
 restarts.
 

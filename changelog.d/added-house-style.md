@@ -1,0 +1,1 @@
+- Every agent kick now includes a house style from the primary repo’s `HIVE_STYLE.md`, hive-wide `project.style_file`/`project.style`, or built-in defaults, with size limits, input scanning and source visibility in agent cards and kick history ([#14575](https://github.com/hivecommons/hive/issues/14575)).

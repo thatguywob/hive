@@ -950,6 +950,11 @@ type ProjectConfig struct {
 	// here can fail a kick. See CheckoutRootFor.
 	CheckoutsDir string `yaml:"checkouts_dir,omitempty"`
 
+	// StyleFile and Style supply the hive-wide house style, behind the primary
+	// repo's HIVE_STYLE.md. Each source is rejected whole above 4096 bytes.
+	StyleFile string `yaml:"style_file,omitempty"`
+	Style     string `yaml:"style,omitempty"`
+
 	// AgentsMdMaxBytes caps the rendered AGENTS.md block prepended to a kick
 	// (#12129). The block is cut at heading boundaries — whole sections are
 	// kept or dropped, never clipped mid-rule — and when anything is dropped

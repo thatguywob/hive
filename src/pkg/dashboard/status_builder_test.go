@@ -1646,3 +1646,12 @@ func TestMarkStatusStaleRepublishesLastGoodWithMarker(t *testing.T) {
 		t.Fatal("same marker must not republish")
 	}
 }
+
+func TestAgentCardHouseStyleSourceUsesDeliveredPrompt(t *testing.T) {
+	cfg := &config.Config{Project: config.ProjectConfig{Style: "New host rules"}, AgentRuntimeConfig: config.AgentRuntimeConfig{Agents: map[string]config.AgentConfig{"scanner": {Enabled: true, Backend: "codex"}}}}
+	statuses := map[string]*crux.Process{"scanner": {Name: "scanner", State: crux.StateRunning, Config: cfg.Agents["scanner"], LastKickMessage: "[agent:scanner]\n\n## HOUSE STYLE (source: repo)\n\nOld repo rules"}}
+	agents := buildAgents(statuses, cfg, governor.State{Mode: governor.ModeIdle})
+	if len(agents) != 1 || agents[0].HouseStyleSource != "repo" {
+		t.Fatalf("card should describe delivered style: %+v", agents)
+	}
+}
