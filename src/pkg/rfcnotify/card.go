@@ -2,11 +2,14 @@ package rfcnotify
 
 import (
 	"fmt"
+	"net/url"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/hivecommons/hive/crux/logscrub"
 	"github.com/hivecommons/hive/pkg/discord"
+	"github.com/hivecommons/hive/pkg/stagelabels"
 )
 
 // Embed is an alias for discord.Embed.
@@ -64,6 +67,7 @@ func ParseRFC(body string) RFCMeta {
 
 	inSummary := false
 	inDecisions := false
+	decisionsLevel := 0
 	var summaryLines []string
 
 	for i := 0; i < len(lines); i++ {
@@ -76,11 +80,15 @@ func ParseRFC(body string) RFCMeta {
 				continue
 			} else if headingDecisionsRE.MatchString(line) {
 				inDecisions = true
+				decisionsLevel = headingLevel(line)
 				inSummary = false
 				continue
 			} else {
 				inSummary = false
-				inDecisions = false
+				// Sub-sections of the decisions heading keep counting.
+				if inDecisions && headingLevel(line) <= decisionsLevel {
+					inDecisions = false
+				}
 			}
 		}
 
@@ -131,22 +139,22 @@ func ParseRFC(body string) RFCMeta {
 					switch {
 					case key == "target":
 						if meta.Target == "" {
-							meta.Target = val
+							meta.Target = defuseLinks(val)
 						}
 					case key == "status":
 						if meta.Status == "" {
-							meta.Status = val
+							meta.Status = defuseLinks(val)
 						}
 					case isRelatedKey(key):
 						links := extractRFCLinks(val)
 						if len(links) > 0 {
 							for _, l := range links {
-								if !containsString(meta.RelatedRFCLinks, l) {
+								if !slices.Contains(meta.RelatedRFCLinks, l) {
 									meta.RelatedRFCLinks = append(meta.RelatedRFCLinks, l)
 								}
 							}
-						} else if val != "" && !containsString(meta.RelatedRFCLinks, val) {
-							meta.RelatedRFCLinks = append(meta.RelatedRFCLinks, val)
+						} else if val != "" && !slices.Contains(meta.RelatedRFCLinks, defuseLinks(val)) {
+							meta.RelatedRFCLinks = append(meta.RelatedRFCLinks, defuseLinks(val))
 						}
 					}
 				}
@@ -156,17 +164,24 @@ func ParseRFC(body string) RFCMeta {
 
 	if len(summaryLines) > 0 {
 		rawSummary := strings.Join(strings.Fields(strings.Join(summaryLines, " ")), " ")
-		meta.Summary = truncateRunes(logscrub.ScrubString(rawSummary), MaxSummaryRunes)
+		meta.Summary = truncateRunes(defuseLinks(logscrub.ScrubString(rawSummary)), MaxSummaryRunes)
 	}
 
 	return meta
 }
 
+func headingLevel(line string) int {
+	return len(line) - len(strings.TrimLeft(line, "#"))
+}
+
+// defuseLinks breaks markdown [text](url) syntax so body text cannot render
+// as a masked link in a Discord embed.
+func defuseLinks(s string) string {
+	return strings.ReplaceAll(s, "](", "] (")
+}
+
 func isTableHeaderOrSeparator(key, val string) bool {
-	if key == "field" || key == "key" || strings.HasPrefix(key, "---") || strings.HasPrefix(val, "---") {
-		return true
-	}
-	return false
+	return key == "field" || key == "key" || strings.HasPrefix(key, "---") || strings.HasPrefix(val, "---")
 }
 
 func isRelatedKey(k string) bool {
@@ -214,15 +229,6 @@ func isNumberedItem(line string) bool {
 	return numberedItemRE.MatchString(line)
 }
 
-func containsString(slice []string, s string) bool {
-	for _, v := range slice {
-		if v == s {
-			return true
-		}
-	}
-	return false
-}
-
 func truncateRunes(s string, limit int) string {
 	if limit <= 0 {
 		return ""
@@ -235,10 +241,13 @@ func truncateRunes(s string, limit int) string {
 }
 
 func isNeedsDecision(labels []string) bool {
+	wants := []string{stagelabels.NeedsDecision.Label(), stagelabels.IssueNeedsDecision.Label()}
 	for _, l := range labels {
-		l = strings.ToLower(strings.TrimSpace(l))
-		if l == "stage/045-needs-decision" || l == "needs-decision" || l == "stage/085-needs-decision" {
-			return true
+		l = strings.TrimSpace(l)
+		for _, w := range wants {
+			if strings.EqualFold(l, w) {
+				return true
+			}
 		}
 	}
 	return false
@@ -289,7 +298,7 @@ func Card(e Event, meta RFCMeta, includeRepo bool) Embed {
 	if a := strings.TrimSpace(e.Issue.Author); a != "" {
 		author = &discord.EmbedAuthor{
 			Name:    truncateRunes(a, MaxAuthorNameRunes),
-			IconURL: fmt.Sprintf("https://github.com/%s.png", a),
+			IconURL: fmt.Sprintf("https://github.com/%s.png", url.PathEscape(a)),
 		}
 	}
 

@@ -31,7 +31,6 @@ const rfcRepoVisibilityTTL = time.Hour
 type rfcNotifyState struct {
 	sweeper *rfcnotify.Sweeper
 	pub     rfcnotify.Publisher
-	post    rfcnotify.Poster
 	// channel the poster was built for; a config change rebuilds it.
 	channel string
 	// gates the sweeper was built with; a config change rebuilds it.
@@ -46,8 +45,7 @@ type rfcNotifyState struct {
 	// statePath is rfcNotifyStatePath in production; tests point it at a
 	// temp dir.
 	statePath string
-	// newPoster builds the Discord poster; nil builds botPublisher.
-	// Tests inject a recorder.
+	// newPoster builds the Discord poster. Tests inject a recorder.
 	newPoster func(token, channel string) rfcnotify.Poster
 	// newPublisher builds the Discord publisher; nil adapts newPoster or builds botPublisher.
 	newPublisher func(token, channel string) rfcnotify.Publisher
@@ -119,15 +117,11 @@ func (s *rfcNotifyState) ensure(cfg *config.Config, repos int, logger *slog.Logg
 	if s.pub == nil || s.channel != channel {
 		if s.newPublisher != nil {
 			s.pub = s.newPublisher(token, channel)
-			s.post = func(content string) error { return s.pub.Post(content) }
 		} else if s.newPoster != nil {
-			p := s.newPoster(token, channel)
-			s.post = p
-			s.pub = p
+			s.pub = s.newPoster(token, channel)
 		} else {
 			bot := discord.NewBot(discord.Config{Token: token}, logger)
 			s.pub = botPublisher{bot: bot, channel: channel}
-			s.post = func(content string) error { return bot.SendMessageTo(channel, content) }
 		}
 		s.channel = channel
 	}
