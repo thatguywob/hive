@@ -9,6 +9,10 @@
   const near = (a, b) => Math.abs(a - b) <= tolerance;
   const visible = el => el && el.getClientRects().length && getComputedStyle(el).display !== 'none';
   const rect = el => el.getBoundingClientRect();
+  // display:contents contributes its children's boxes to the flex layout,
+  // even though the wrapper itself has no client rect (e.g. a working icon).
+  const layoutChildren = el => [...el.children].flatMap(child =>
+    getComputedStyle(child).display === 'contents' ? layoutChildren(child) : [child]);
   const assert = (ok, label) => { if (!ok) failures.push(label); };
   const settleScroll = async (control, name) => {
     const maxFrames = 12;
@@ -177,7 +181,8 @@
     // Compact height: captions are clamped to one line, so every row is
     // exactly one text line plus the chevron's own padding and border
     // (~20px) — the pre-hivecommons/hive#16454 density. Icon-only rows
-    // share the same one-line floor.
+    // share the same one-line floor. Mobile buttons also impose the shared
+    // accessibility minimum (44px); that is independent of caption wrapping.
     const lineWidth = parseFloat(getComputedStyle(strip).getPropertyValue('--line-width')) || 0;
     const cellBudget = (cell, lines, border) => {
       const style = getComputedStyle(cell);
@@ -186,6 +191,9 @@
     };
     let rowLines = 0, expectedHeight = cellBudget(columns[0], 1, 2 * lineWidth);
     for (const cell of columns) {
+      for (const control of cell.querySelectorAll('button, [role="button"]')) {
+        if (visible(control)) expectedHeight = Math.max(expectedHeight, parseFloat(getComputedStyle(control).minHeight) || 0);
+      }
       for (const copy of cell.querySelectorAll('.ham-chevron-copy, .cue-acting-cap')) {
         if (!visible(copy)) continue;
         const lines = Math.max(1, Math.round(rect(copy).height / parseFloat(getComputedStyle(copy).lineHeight)));
@@ -194,7 +202,7 @@
       }
     }
     assert(rowLines <= 1, name + 'captions are clamped to a single line: ' + JSON.stringify({ lines: rowLines }));
-    assert(near(Math.max(...heights), expectedHeight), name + 'chevron height is one text line + padding, not a two-line box: ' +
+    assert(near(Math.max(...heights), expectedHeight), name + 'chevron height is one text line + padding or the control touch minimum: ' +
       JSON.stringify({ measured: Math.max(...heights), expected: expectedHeight }));
     coverage.singleLineRows++;
     if (strip.querySelector('.ham-chevron-copy') && [...strip.querySelectorAll('.ham-chevron-copy')].some(c => visible(c) && c.scrollHeight > rect(c).height + tolerance)) coverage.clampedRows++;
@@ -272,7 +280,7 @@
             JSON.stringify({ text, copy: { left: bounds.left, right: bounds.right } }));
         }
         const group = copy.parentElement === info
-          ? [...info.children].filter(child => visible(child) && !child.classList.contains('config-tooltip')).map(rect)
+          ? layoutChildren(info).filter(child => visible(child) && !child.classList.contains('config-tooltip')).map(rect)
           : [bounds];
         const union = { left: Math.min(...group.map(box => box.left)), right: Math.max(...group.map(box => box.right)),
           top: Math.min(...group.map(box => box.top)), bottom: Math.max(...group.map(box => box.bottom)) };
